@@ -10,6 +10,7 @@ import axios from 'axios';
 import SideMenu from './SideMenu';
 import Image from 'next/image';
 import logo2 from './logo2.png';
+import API_URL from '../../config';
 
 const AdvertisementComponent = ({ position }) => {
   const [advertisements, setAdvertisements] = useState([]);
@@ -17,15 +18,19 @@ const AdvertisementComponent = ({ position }) => {
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-        setAdvertisements(response.data.advertisements);
-        console.log(`Fetched ${position} advertisements:`, response.data.advertisements);
+        const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+        const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+        setAdvertisements(ads);
       } catch (error) {
-        console.error(`Error fetching ${position} advertisements:`, error);
+        // Silently handle - no ads available for this position
+        console.warn(`No advertisements for position: ${position}`);
+        setAdvertisements([]);
       }
     };
 
-    fetchAdvertisements();
+    if (position) {
+      fetchAdvertisements();
+    }
   }, [position]);
 
   const handleAdvertisementClick = (websiteLink) => {
@@ -50,7 +55,7 @@ const AdvertisementComponent = ({ position }) => {
           className="cursor-pointer hover:shadow-lg transition-shadow duration-300"
           onClick={() => handleAdvertisementClick(advertisement.websiteLink)}
         >
-          <img src={`https://potal.theeverestnews.com/${advertisement.imagePath}`} alt="Advertisement" className="w-full h-auto rounded-md" />
+          <img src={`${API_URL}/${advertisement.imagePath}`} alt="Advertisement" className="w-full h-auto rounded-md" />
         </div>
       ))}
     </div>

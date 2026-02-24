@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { IoTimeOutline } from 'react-icons/io5';
+import API_URL from '../config';
 
 const AdvertisementComponent = ({ position }) => {
   const [advertisements, setAdvertisements] = useState([]);
@@ -10,14 +11,18 @@ const AdvertisementComponent = ({ position }) => {
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-        setAdvertisements(response.data.advertisements);
+        const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+        const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+        setAdvertisements(ads);
       } catch (error) {
-        console.error(`Error fetching ${position} advertisements:`, error);
+        console.warn(`No advertisements for position: ${position}`);
+        setAdvertisements([]);
       }
     };
 
-    fetchAdvertisements();
+    if (position) {
+      fetchAdvertisements();
+    }
   }, [position]);
 
   const handleAdvertisementClick = (websiteLink) => {
@@ -34,7 +39,7 @@ const AdvertisementComponent = ({ position }) => {
     <div className="flex flex-row justify-center items-center">
       {advertisements.map((advertisement, index) => (
         <div key={index} className="advertisement cursor-pointer" onClick={() => handleAdvertisementClick(advertisement.websiteLink)}>
-          <img className="rounded" src={`https://potal.theeverestnews.com/${advertisement.imagePath}`} alt="Advertisement" />
+          <img className="rounded" src={`${API_URL}/${advertisement.imagePath}`} alt="Advertisement" />
         </div>
       ))}
     </div>
@@ -62,7 +67,7 @@ const CardSkeleton = () => {
   );
 };
 
-const Card = ({ id, headline, imageUrl, createdAt, category, onClick, onCategoryClick }) => {
+const Card = React.memo(({ id, headline, imageUrl, createdAt, category, onClick, onCategoryClick }) => {
   const timeAgo = formatDistanceToNow(parseISO(createdAt), { addSuffix: true });
 
   return (
@@ -70,11 +75,12 @@ const Card = ({ id, headline, imageUrl, createdAt, category, onClick, onCategory
       className="relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer"
       onClick={() => onClick(id)}
     >
-      <div className="relative h-64">
+      <div className="relative h-64 overflow-hidden">
         <img
           src={imageUrl}
           alt={headline}
           className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          loading="lazy"
           onError={() => console.error('Failed to load image:', imageUrl)}
         />
         <div className="absolute top-4 left-4 bg-black bg-opacity-60 text-white text-xs font-semibold py-1 px-3 rounded-lg flex items-center">
@@ -98,7 +104,7 @@ const Card = ({ id, headline, imageUrl, createdAt, category, onClick, onCategory
       </div>
     </div>
   );
-};
+});
 
 const Sports = () => {
   const [articles, setArticles] = useState([]);
@@ -110,13 +116,12 @@ const Sports = () => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('https://potal.theeverestnews.com/api/english/category/sports');
+        const response = await axios.get(`${API_URL}/api/english/category/sports`, {
+          params: { page: 1, limit: 6 }
+        });
         if (response.data.success) {
-          const sortedArticles = response.data.data
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 6);
-          setArticles(sortedArticles);
-          console.log('Fetched and sorted articles:', sortedArticles);
+          // Backend already returns sorted by createdAt descending
+          setArticles(response.data.data);
         }
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -131,7 +136,7 @@ const Sports = () => {
 
   const handleArticleClick = async (id) => {
     try {
-      await axios.put(`https://potal.theeverestnews.com/api/english/articles/increment-views/${id}`);
+      await axios.put(`${API_URL}/api/english/articles/increment-views/${id}`);
       router.push(`/article/${id}`);
     } catch (error) {
       console.error('Error incrementing views:', error);
@@ -172,7 +177,7 @@ const Sports = () => {
         ) : (
           // Show actual articles when loaded
           articles.map((article) => {
-            const imageUrl = `https://potal.theeverestnews.com/uploads/english/${article.photos[0]}`;
+            const imageUrl = `${API_URL}/uploads/english/${article.photos[0]}`;
             return (
               <Card
                 key={article._id}

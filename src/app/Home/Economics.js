@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { IoTimeOutline } from 'react-icons/io5';
 import TrendingArticles from '../Pages/TrendingPage';
+import API_URL from '../config';
 
 const AdvertisementComponent = ({ position }) => {
   const [advertisements, setAdvertisements] = useState([]);
@@ -11,14 +12,18 @@ const AdvertisementComponent = ({ position }) => {
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-        setAdvertisements(response.data.advertisements);
+        const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+        const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+        setAdvertisements(ads);
       } catch (error) {
-        console.error(`Error fetching ${position} advertisements:`, error);
+        console.warn(`No advertisements for position: ${position}`);
+        setAdvertisements([]);
       }
     };
 
-    fetchAdvertisements();
+    if (position) {
+      fetchAdvertisements();
+    }
   }, [position]);
 
   const handleAdvertisementClick = (websiteLink) => {
@@ -35,7 +40,7 @@ const AdvertisementComponent = ({ position }) => {
     <div className="flex flex-row justify-center items-center">
       {advertisements.map((advertisement, index) => (
         <div key={index} className="advertisement cursor-pointer" onClick={() => handleAdvertisementClick(advertisement.websiteLink)}>
-          <img className="rounded" src={`https://potal.theeverestnews.com/${advertisement.imagePath}`} alt="Advertisement" />
+          <img className="rounded" src={`${API_URL}/${advertisement.imagePath}`} alt="Advertisement" />
         </div>
       ))}
     </div>
@@ -111,13 +116,10 @@ const Economics = () => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('https://potal.theeverestnews.com/api/english/category/economics');
+        // Backend returns up to 6 items sorted by createdAt descending
+        const response = await axios.get(`${API_URL}/api/english/category/economics?limit=6&sortBy=createdAt&sortOrder=desc`);
         if (response.data.success) {
-          const sortedArticles = response.data.data
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 6);
-          setArticles(sortedArticles);
-          console.log('Fetched and sorted articles:', sortedArticles);
+          setArticles(response.data.data);
         }
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -132,7 +134,7 @@ const Economics = () => {
 
   const handleArticleClick = async (id) => {
     try {
-      await axios.put(`https://potal.theeverestnews.com/api/english/articles/increment-views/${id}`);
+      await axios.put(`${API_URL}/api/english/articles/increment-views/${id}`);
       router.push(`/article/${id}`);
     } catch (error) {
       console.error('Error incrementing views:', error);
@@ -175,7 +177,7 @@ const Economics = () => {
             ) : (
               // Show actual articles when loaded
               articles.map((article) => {
-                const imageUrl = `https://potal.theeverestnews.com/uploads/english/${article.photos[0]}`;
+                const imageUrl = `${API_URL}/uploads/english/${article.photos[0]}`;
                 return (
                   <Card
                     key={article._id}

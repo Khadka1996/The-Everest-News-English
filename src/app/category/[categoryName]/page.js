@@ -11,6 +11,7 @@ import FooterBottom from '@/app/Components/Footer/FooterBottom';
 import Photo from '@/app/Home/PhotoGallery';
 import Videos from '@/app/ImageVideo/Video';
 import Image from 'next/image';
+import API_URL from '@/app/config';
 
 const CategoryPage = () => {
   const [articles, setArticles] = useState([]);
@@ -53,14 +54,18 @@ const CategoryPage = () => {
     useEffect(() => {
       const fetchAdvertisements = async () => {
         try {
-          const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-          setAdvertisements(response.data.advertisements);
+          const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+          const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+          setAdvertisements(ads);
         } catch (error) {
-          console.error(`Error fetching ${position} advertisements:`, error);
+          console.warn(`No advertisements for position: ${position}`);
+          setAdvertisements([]);
         }
       };
 
-      fetchAdvertisements();
+      if (position) {
+        fetchAdvertisements();
+      }
     }, [position]);
 
     const handleAdvertisementClick = (websiteLink) => {
@@ -79,7 +84,7 @@ const CategoryPage = () => {
           <div key={index} className="advertisement cursor-pointer" onClick={() => handleAdvertisementClick(advertisement.websiteLink)}>
             <Image
               className="rounded"
-              src={`https://potal.theeverestnews.com/${advertisement.imagePath}`}
+              src={`${API_URL}/${advertisement.imagePath}`}
               alt="Advertisement"
               width={300}
               height={100}
@@ -92,11 +97,11 @@ const CategoryPage = () => {
 
   const Card = ({ article }) => {
     const timeAgo = formatDistanceToNow(parseISO(article.createdAt), { addSuffix: true });
-    const imageUrl = `https://potal.theeverestnews.com/uploads/english/${article.photos[0]}`;
+    const imageUrl = `${API_URL}/uploads/english/${article.photos[0]}`;
 
     const handleClick = async () => {
       try {
-        await axios.put(`https://potal.theeverestnews.com/api/english/articles/increment-views/${article._id}`);
+        await axios.put(`${API_URL}/api/english/articles/increment-views/${article._id}`);
         router.push(`/article/${article._id}`);
       } catch (error) {
         console.error('Error incrementing views:', error);
@@ -138,7 +143,7 @@ const CategoryPage = () => {
     try {
       const category = categoryName.toLowerCase();
       const response = await axios.get(
-        `https://potal.theeverestnews.com/api/english/category/${category}?page=${page}&limit=12`
+        `${API_URL}/api/english/category/${category}?page=${page}&limit=12`
       );
       
       if (response.data.success) {

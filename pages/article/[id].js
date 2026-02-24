@@ -9,6 +9,7 @@ import Video from '@/app/ImageVideo/Video';
 import FooterBottom from '@/app/Components/Footer/FooterBottom';
 import '@/app/globals.css';
 import ArticlePage from '@/app/articless/page';
+import API_URL from '@/app/config';
 
 const ServerPage = ({ initialData }) => {
   const router = useRouter();
@@ -22,7 +23,7 @@ const ServerPage = ({ initialData }) => {
       const fetchData = async () => {
         try {
           setLoading(true);
-          const response = await axios.get(`https://potal.theeverestnews.com/api/english/${router.query.id}`);
+          const response = await axios.get(`${API_URL}/api/english/${router.query.id}`);
           setData(response.data.data);
         } catch (err) {
           console.error('Error fetching article data:', err);
@@ -78,7 +79,7 @@ const ServerPage = ({ initialData }) => {
     }
   };
 
-  const imageUri = photos?.length > 0 ? `https://potal.theeverestnews.com/uploads/english/${photos[0].split('/').pop()}` : '';
+  const imageUri = photos?.length > 0 ? `${API_URL}/uploads/english/${photos[0].split('/').pop()}` : '';
 
   const stripHtmlTags = (html) => {
     return html.replace(/<[^>]+>/g, '');
@@ -116,7 +117,7 @@ export const getServerSideProps = async (context) => {
   let articleData = null;
 
   try {
-    const response = await axios.get(`https://potal.theeverestnews.com/api/english/${id}`);
+    const response = await axios.get(`${API_URL}/api/english/${id}`);
     articleData = response.data.data || null;
 
     if (!articleData) {
@@ -124,6 +125,10 @@ export const getServerSideProps = async (context) => {
     }
   } catch (error) {
     console.error('Error fetching article data:', error);
+    // Return 404 if article not found
+    if (error.response?.status === 404) {
+      return { notFound: true };
+    }
   }
 
   return {

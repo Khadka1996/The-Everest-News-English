@@ -3,6 +3,7 @@ const { createServer } = require('http');
 const { parse } = require('url');
 const next = require('next');
 
+const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.HOSTNAME || 'localhost';
 const port = process.env.PORT || 5000;
 
@@ -29,7 +30,7 @@ app.prepare().then(() => {
     }
   })
     .once('error', (err) => {
-      console.error(err);
+      console.error('Server error:', err);
       process.exit(1);
     })
     .listen(port, () => {

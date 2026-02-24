@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import defaultPhoto from '../Components/assets/logo.png';
+import API_URL from '../config';
 
 const TrendingArticles = () => {
   const [trendingArticles, setTrendingArticles] = useState([]);
@@ -10,7 +11,7 @@ const TrendingArticles = () => {
   const fetchTrendingArticles = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://potal.theeverestnews.com/api/english/trending');
+      const response = await axios.get(`${API_URL}/api/english/trending`);
       setTrendingArticles(response.data.data);
     } catch (error) {
       console.error('Error fetching trending articles:', error);
@@ -22,7 +23,7 @@ const TrendingArticles = () => {
 
   const handleArticleClick = async (articleId) => {
     try {
-      await axios.put(`https://potal.theeverestnews.com/api/english/articles/increment-views/${articleId}`);
+      await axios.put(`${API_URL}/api/english/articles/increment-views/${articleId}`);
       window.scrollTo(0, 0);
     } catch (error) {
       console.error('Error incrementing views:', error);
@@ -84,7 +85,7 @@ const TrendingArticles = () => {
               <div className="relative w-20 h-20 flex-shrink-0">
                 {article.photos && article.photos.length > 0 ? (
                   <img
-                    src={`https://potal.theeverestnews.com/uploads/english/${article.photos[0].split('/').pop()}`}
+                    src={`${API_URL}/uploads/english/${article.photos[0].split('/').pop()}`}
                     alt={`Photo ${index}`}
                     className="object-cover w-full h-full rounded-l shadow-sm"
                   />

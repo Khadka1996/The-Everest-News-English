@@ -8,6 +8,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import axios from "axios";
 import Readmore from "../Home/Readmore";
 import Image from "next/image";
+import API_URL from '../config';
 
 const ArticlePage = () => {
   const { id } = useParams();
@@ -19,12 +20,24 @@ const ArticlePage = () => {
 
   useEffect(() => {
     const fetchArticle = async () => {
+      if (!id) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const response = await axios.get(`https://potal.theeverestnews.com/api/english/${id}`);
+        console.log(`Fetching article from: ${API_URL}/api/english/${id}`);
+        const response = await axios.get(`${API_URL}/api/english/${id}`, {
+          timeout: 10000,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        console.log('Article fetched:', response.data);
         setArticle(response.data.data || null);
         setLoading(false);
       } catch (error) {
-        console.error("Error fetching article data:", error);
+        console.error("Error fetching article data:", error.message);
+        console.error("API URL:", API_URL);
+        console.error("Article ID:", id);
         setError(error);
         setLoading(false);
       }
@@ -64,7 +77,7 @@ const ArticlePage = () => {
 
     try {
       window.open(shareUrl, '_blank');
-      await axios.post(`https://potal.theeverestnews.com/api/english/articles/${id}/share`, {
+      await axios.post(`${API_URL}/api/english/articles/${id}/share`, {
         platform,
       });
     } catch (error) {
@@ -155,16 +168,24 @@ const ArticlePage = () => {
     useEffect(() => {
       const fetchAdvertisements = async () => {
         try {
-          const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-          setAdvertisements(response.data.advertisements);
+          const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+          // Handle both array and object response formats
+          const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+          setAdvertisements(ads);
         } catch (error) {
-          console.error(`Error fetching ${position} advertisements:`, error);
+          // Silently handle errors - it's okay if no ads exist for this position
+          console.warn(`No advertisements found for position: ${position}`);
+          setAdvertisements([]);
         } finally {
           setAdLoading(false);
         }
       };
 
-      fetchAdvertisements();
+      if (position) {
+        fetchAdvertisements();
+      } else {
+        setAdLoading(false);
+      }
     }, [position]);
 
     const handleAdvertisementClick = (websiteLink) => {
@@ -188,7 +209,7 @@ const ArticlePage = () => {
               <div key={ad._id} onClick={() => handleAdvertisementClick(ad.websiteLink)}>
                 <Image
                  className='rounded mb-2' 
-                 src={`https://potal.theeverestnews.com/${ad.imagePath}`} 
+                 src={`${API_URL}/${ad.imagePath}`} 
                  alt="Advertisement"
                  width={300}
                  height={100}
@@ -208,7 +229,7 @@ const ArticlePage = () => {
 
   const timeAgo = article ? formatDistanceToNow(parseISO(article.createdAt), { addSuffix: true }) : '';
 
-  const imageUri = article?.photos?.[0] ? `https://potal.theeverestnews.com/uploads/english/${article.photos[0].split('/').pop()}` : '';
+  const imageUri = article?.photos?.[0] ? `${API_URL}/uploads/english/${article.photos[0].split('/').pop()}` : '';
 
   if (loading) return <ArticleSkeleton />;
   if (error) return <p className="text-red-500 text-center py-8">Error loading article.</p>;
@@ -246,7 +267,7 @@ const ArticlePage = () => {
                   {article.photos.map((photo, index) => (
                     <Image
                       key={index}
-                      src={`https://potal.theeverestnews.com/uploads/english/${photo.split('/').pop()}`}
+                      src={`${API_URL}/uploads/english/${photo.split('/').pop()}`}
                       alt={`Photo ${index}`}
                       layout="responsive"
                       width={16}

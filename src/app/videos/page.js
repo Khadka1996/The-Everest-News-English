@@ -8,6 +8,7 @@ import Heading from '../Components/Header/MiddleHeader';
 import BottomHeader from '../Components/Header/BottomHeader';
 import FooterBottom from '../Components/Footer/FooterBottom';
 import PhotoGallery from '../Home/PhotoGallery';
+import API_URL from '../config';
 
 
 const AdvertisementComponent = ({ position }) => {
@@ -16,14 +17,18 @@ const AdvertisementComponent = ({ position }) => {
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-        setAdvertisements(response.data.advertisements);
+        const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+        const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+        setAdvertisements(ads);
       } catch (error) {
-        console.error(`Error fetching ${position} advertisements:`, error);
+        console.warn(`No advertisements for position: ${position}`);
+        setAdvertisements([]);
       }
     };
 
-    fetchAdvertisements();
+    if (position) {
+      fetchAdvertisements();
+    }
   }, [position]);
 
   const handleAdvertisementClick = (websiteLink) => {
@@ -51,7 +56,7 @@ const AdvertisementComponent = ({ position }) => {
             >
               <img
                 className='rounded w-full h-auto'
-                src={`https://potal.theeverestnews.com/${advertisement.imagePath}`}
+                src={`${API_URL}/${advertisement.imagePath}`}
                 alt="Advertisement"
               />
             </div>
@@ -67,13 +72,11 @@ const Videos = () => {
   const [visibleVideos, setVisibleVideos] = useState(9); // State to track number of visible videos
 
   useEffect(() => {
-    // Fetch videos from your backend API
-    fetch('https://potal.theeverestnews.com/api/videos')
+    // Fetch videos from backend (already sorted by date descending)
+    fetch(`${API_URL}/api/videos?sortBy=date&sortOrder=desc`)
       .then((response) => response.json())
       .then((data) => {
-        // Sort videos by date in descending order
-        const sortedVideos = data.videos.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setVideos(sortedVideos);
+        setVideos(data.videos || []);
       })
       .catch((error) => console.error('Error fetching videos:', error));
   }, []);
@@ -102,7 +105,7 @@ const Videos = () => {
             <div key={video._id} className="video-card bg-white shadow-lg rounded-lg overflow-hidden">
               {video.videoType === 'local' ? (
                 <video className="video w-full h-64" controls>
-                  <source src={`https://potal.theeverestnews.com/${video.videoFile}`} type="video/mp4" />
+                  <source src={`${API_URL}/${video.videoFile}`} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
               ) : (

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { IoTimeOutline} from 'react-icons/io5'; // Photo icon
+import { IoTimeOutline} from 'react-icons/io5';
+import API_URL from '../config';
 import { IoMdPhotos } from "react-icons/io";
 
 const AdvertisementComponent = ({ position }) => {
@@ -11,14 +12,18 @@ const AdvertisementComponent = ({ position }) => {
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get(`https://potal.theeverestnews.com/api/advertisements/${position}`);
-        setAdvertisements(response.data.advertisements);
+        const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+        const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+        setAdvertisements(ads);
       } catch (error) {
-        console.error(`Error fetching ${position} advertisements:`, error);
+        console.warn(`No advertisements for position: ${position}`);
+        setAdvertisements([]);
       }
     };
 
-    fetchAdvertisements();
+    if (position) {
+      fetchAdvertisements();
+    }
   }, [position]);
 
   const handleAdvertisementClick = (websiteLink) => {
@@ -35,7 +40,7 @@ const AdvertisementComponent = ({ position }) => {
     <div className="flex flex-row justify-center items-center">
       {advertisements.map((advertisement, index) => (
         <div key={index} className="advertisement cursor-pointer" onClick={() => handleAdvertisementClick(advertisement.websiteLink)}>
-          <img className="rounded" src={`https://potal.theeverestnews.com/${advertisement.imagePath}`} alt="Advertisement" />
+          <img className="rounded" src={`${API_URL}/${advertisement.imagePath}`} alt="Advertisement" />
         </div>
       ))}
     </div>
@@ -84,7 +89,7 @@ const PhotoGallery = () => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await axios.get('https://potal.theeverestnews.com/api/english/category/photogallery');
+        const response = await axios.get(`${API_URL}/api/english/category/photogallery`);
         if (response.data.success) {
           const sortedArticles = response.data.data
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -102,7 +107,7 @@ const PhotoGallery = () => {
 
   const handleArticleClick = async (id) => {
     try {
-      await axios.put(`https://potal.theeverestnews.com/api/english/articles/increment-views/${id}`);
+      await axios.put(`${API_URL}/api/english/articles/increment-views/${id}`);
       router.push(`/article/${id}`);
     } catch (error) {
       console.error('Error incrementing views:', error);
@@ -131,7 +136,7 @@ const PhotoGallery = () => {
       <div className='bg-[#73B85D]'>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-5 gap-2  ">
         {articles.map((article) => {
-          const imageUrl = `https://potal.theeverestnews.com/uploads/english/${article.photos[0]}`;
+          const imageUrl = `${API_URL}/uploads/english/${article.photos[0]}`;
           return (
             <Card
               key={article._id}

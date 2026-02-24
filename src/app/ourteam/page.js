@@ -6,6 +6,7 @@ import NavbarTop from '@/app/Components/Header/TopHeader';
 import Heading from '@/app/Components/Header/MiddleHeader';
 import BottomHeader from '@/app/Components/Header/BottomHeader';
 import FooterBottom from '@/app/Components/Footer/FooterBottom';
+import API_URL from '@/app/config';
 
 const AdvertisementComponent = ({ position }) => {
   const [advertisements, setAdvertisements] = useState([]);
@@ -13,14 +14,18 @@ const AdvertisementComponent = ({ position }) => {
   useEffect(() => {
     const fetchAdvertisements = async () => {
       try {
-        const response = await axios.get(`https://api.theeverestnews.com/api/advertisements/${position}`);
-        setAdvertisements(response.data.advertisements);
+        const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
+        const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+        setAdvertisements(ads);
       } catch (error) {
-        console.error(`Error fetching ${position} advertisements:`, error);
+        console.warn(`No advertisements for position: ${position}`);
+        setAdvertisements([]);
       }
     };
 
-    fetchAdvertisements();
+    if (position) {
+      fetchAdvertisements();
+    }
   }, [position]);
 
   const handleAdvertisementClick = (websiteLink) => {

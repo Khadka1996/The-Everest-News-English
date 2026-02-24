@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { FaTimes } from 'react-icons/fa';
+import API_URL from '../../config';
 
 const toNepaliNumber = (number) => {
   const nepaliNumbers = ['१', '२', '३', '४', '५', '६', '७', '८', '९', '१०'];
@@ -16,7 +17,7 @@ const TrendingArticles = ({ onClose }) => {
 
   const handleArticleClick = async (id) => {
     try {
-      await axios.put(`https://potal.theeverestnews.com/api/articles/increment-views/${id}`);
+      await axios.put(`${API_URL}/api/articles/increment-views/${id}`);
     } catch (error) {
       console.error('Error incrementing views:', error);
       setError('Error incrementing views. Please try again later.');
@@ -25,7 +26,7 @@ const TrendingArticles = ({ onClose }) => {
   useEffect(() => {
     const fetchTrendingArticles = async () => {
       try {
-        const response = await axios.get('https://potal.theeverestnews.com/api/english/trending');
+        const response = await axios.get(`${API_URL}/api/english/trending`);
         setLatestArticles(response.data.data);
       } catch (error) {
         console.error('Error fetching trending articles:', error);
@@ -66,7 +67,8 @@ const TrendingArticles = ({ onClose }) => {
           <div className='flex justify-end items-end overflow-hidden h-20 w-40'>
             {article.photos && article.photos.length > 0 ? (
               <img
-              src={`https://api.theeverestnews.com/uploads/english/${article.photos[0].split('/').pop()}`}                alt={`Photo 0`}
+              src={`${API_URL}/uploads/english/${article.photos[0].split('/').pop()}`}
+                alt={`Photo 0`}
                 className="rounded-lg h-full w-full object-cover"
               />
             ) : (

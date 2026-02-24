@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import PropTypes from 'prop-types';
 import { FaTimes } from 'react-icons/fa';
+import API_URL from '../../config';
 
 const LatestNews = ({ onClose }) => {
   const [latestArticles, setLatestArticles] = useState([]);
@@ -10,7 +11,7 @@ const LatestNews = ({ onClose }) => {
 
   const handleArticleClick = async (id) => {
     try {
-      await axios.put(`https://potal.theeverestnews.com/api/articles/increment-views/${id}`);
+      await axios.put(`${API_URL}/api/articles/increment-views/${id}`);
     } catch (error) {
       console.error('Error incrementing views:', error);
       setError('Error incrementing views. Please try again later.');
@@ -20,13 +21,9 @@ const LatestNews = ({ onClose }) => {
   useEffect(() => {
     const fetchLatestArticles = async () => {
       try {
-        const response = await axios.get('https://potal.theeverestnews.com/api/english/all');
-        const sortedArticles = response.data.data.sort((a, b) => {
-          const dateA = new Date(a.createdAt);
-          const dateB = new Date(b.createdAt);
-          return dateB - dateA; // Sort in descending order
-        });
-        setLatestArticles(sortedArticles);
+        // Backend already returns sorted by createdAt descending
+        const response = await axios.get(`${API_URL}/api/english/all?limit=10&sortBy=createdAt&sortOrder=desc`);
+        setLatestArticles(response.data.data);
       } catch (error) {
         console.error('Error fetching latest articles:', error);
         setError('Error fetching latest articles. Please try again later.');
@@ -66,7 +63,7 @@ const LatestNews = ({ onClose }) => {
                     <div className='flex justify-end items-end overflow-hidden h-20 w-40'>
                       {article.photos && article.photos.length > 0 ? (
                         <img
-                          src={`https://potal.theeverestnews.com/uploads/english/${article.photos[0]}`}
+                          src={`${API_URL}/uploads/english/${article.photos[0]}`}
                           alt={`Photo 0`}
                           className="rounded-lg h-full w-full object-cover "
                         />

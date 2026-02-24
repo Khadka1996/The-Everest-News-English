@@ -8,14 +8,28 @@ const Videos = () => {
   const [videos, setVideos] = useState([]);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/videos`)
-      .then((response) => response.json())
-      .then((data) => {
-        const sortedVideos = data.videos.sort((a, b) => new Date(b.date) - new Date(a.date));
-        const latestVideos = sortedVideos.slice(0, 6);
-        setVideos(latestVideos);
-      })
-      .catch((error) => console.error('Error fetching videos:', error));
+    const fetchVideos = async () => {
+      try {
+        console.log(`Fetching videos from: ${API_URL}/api/videos`);
+        const response = await fetch(`${API_URL}/api/videos?limit=6&sortBy=date&sortOrder=desc`, {
+          timeout: 10000,
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Videos fetched:', data);
+        setVideos(data.videos || []);
+      } catch (error) {
+        console.error('Error fetching videos:', error.message);
+        console.error('API URL:', API_URL);
+        setVideos([]);
+      }
+    };
+
+    fetchVideos();
   }, []);
 
   const getYouTubeVideoId = (url) => {
