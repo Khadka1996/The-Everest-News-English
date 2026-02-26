@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { IoTimeOutline } from 'react-icons/io5';
+import { FaAd } from 'react-icons/fa';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import NavbarTop from '@/app/Components/Header/TopHeader';
 import BottomHeader from '@/app/Components/Header/BottomHeader';
@@ -207,75 +208,89 @@ const CategoryPage = () => {
       <div className="mx-3 md:mx-10 lg:mx-18 py-6">
         <AdvertisementComponent position="english_top" />
         
-        <div className="flex items-center mb-5 mt-5">
-          <span className="flex-none block px-4 py-2.5 text-xl cursor-pointer rounded leading-none font-medium bg-[#25609A] text-white hover:bg-[#81BB6C] transition-colors duration-300">
-            {categoryName} 
-          </span>
-          <span className="flex-grow block border-t border-[#25609A] ml-4"></span>
-        </div>
-
-        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2">
-          {loading ? (
-            // Show skeleton loading while articles are loading
-            Array.from({ length: 12 }).map((_, index) => (
-              <CardSkeleton key={index} />
-            ))
-          ) : articles.length > 0 ? (
-            // Show actual articles when loaded
-            articles.map((article) => (
-              <Card key={article._id} article={article} />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8">
-              <p className="text-gray-500 text-lg">No articles found for this category.</p>
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="md:w-4/5">
+            <div className="flex items-center mb-5 mt-5">
+              <span className="flex-none block px-4 py-2.5 text-xl cursor-pointer rounded leading-none font-medium bg-[#25609A] text-white hover:bg-[#81BB6C] transition-colors duration-300">
+                {categoryName} 
+              </span>
+              <span className="flex-grow block border-t border-[#25609A] ml-4"></span>
             </div>
-          )}
-        </div>
 
-        {/* Pagination */}
-        {!loading && pagination.totalPages > 1 && (
-          <div className="flex justify-center mt-8 mb-5">
-            <div className="flex items-center space-x-2">
-              {/* Previous Button */}
-              <button
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-                className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
-              >
-                Previous
-              </button>
+            {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-              {/* Page Numbers */}
-              {getPaginationButtons().map((page, index) => (
-                <button
-                  key={index}
-                  onClick={() => typeof page === 'number' && handlePageChange(page)}
-                  className={`w-10 h-10 rounded-lg ${
-                    page === pagination.currentPage
-                      ? 'bg-[#25609A] text-white border-2 border-[#7BB660]'
-                      : page === '...'
-                      ? 'bg-transparent cursor-default'
-                      : 'bg-gray-200 hover:bg-gray-300'
-                  } transition-colors`}
-                  disabled={page === '...'}
-                >
-                  {page}
-                </button>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {loading ? (
+                // Show skeleton loading while articles are loading
+                Array.from({ length: 12 }).map((_, index) => (
+                  <CardSkeleton key={index} />
+                ))
+              ) : articles.length > 0 ? (
+                // Show actual articles when loaded
+                articles.map((article) => (
+                  <Card key={article._id} article={article} />
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8">
+                  <p className="text-gray-500 text-lg">No articles found for this category.</p>
+                </div>
+              )}
+            </div>
 
-              {/* Next Button */}
-              <button
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === pagination.totalPages}
-                className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
-              >
-                Next
-              </button>
+            {/* Pagination */}
+            {!loading && pagination.totalPages > 1 && (
+              <div className="flex justify-center mt-8 mb-5">
+                <div className="flex items-center space-x-2">
+                  {/* Previous Button */}
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    disabled={pagination.currentPage === 1}
+                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                  >
+                    Previous
+                  </button>
+
+                  {/* Page Numbers */}
+                  {getPaginationButtons().map((page, index) => (
+                    <button
+                      key={index}
+                      onClick={() => typeof page === 'number' && handlePageChange(page)}
+                      className={`w-10 h-10 rounded-lg ${
+                        page === pagination.currentPage
+                          ? 'bg-[#25609A] text-white border-2 border-[#7BB660]'
+                          : page === '...'
+                          ? 'bg-transparent cursor-default'
+                          : 'bg-gray-200 hover:bg-gray-300'
+                      } transition-colors`}
+                      disabled={page === '...'}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                  {/* Next Button */}
+                  <button
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    className="px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Sidebar */}
+          <div className="w-full md:w-1/5 flex-shrink-0 space-y-6">
+            <div className="bg-white p-1 rounded-lg shadow-lg sticky top-6">
+              <h3 className="font-bold text-lg mb-4 pb-1 border-b border-gray-200 flex items-center">
+                <FaAd className="text-[#25609A] mr-2" />
+              </h3>
+              <AdvertisementComponent position="english_sidebar2" />
             </div>
           </div>
-        )}
+        </div>
 
         <AdvertisementComponent position="below_category" />
       </div>

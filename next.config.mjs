@@ -14,12 +14,6 @@ const nextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'http',
-        hostname: '192.168.1.67',
-        port: '5000',
-        pathname: '/**',
-      },
-      {
         protocol: 'https',
         hostname: 'potal.theeverestnews.com',
         pathname: '/**',

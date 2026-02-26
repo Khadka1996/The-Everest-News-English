@@ -77,9 +77,19 @@ const ArticlePage = () => {
 
     try {
       window.open(shareUrl, '_blank');
+      
+      // Send share count update to backend
       await axios.post(`${API_URL}/api/english/articles/${id}/share`, {
         platform,
       });
+      
+      // Refetch article data from database to get updated shareCount
+      const articleResponse = await axios.get(`${API_URL}/api/english/${id}`);
+      const updatedArticleData = articleResponse.data.data;
+      
+      if (updatedArticleData) {
+        setArticle(updatedArticleData);
+      }
     } catch (error) {
       console.error(`Error sharing on ${platform}:`, error);
     }
@@ -168,13 +178,16 @@ const ArticlePage = () => {
     useEffect(() => {
       const fetchAdvertisements = async () => {
         try {
+          console.log(`📢 Fetching ads for position: ${position} from ${API_URL}/api/advertisements/${position}`);
           const response = await axios.get(`${API_URL}/api/advertisements/${position}`);
           // Handle both array and object response formats
           const ads = Array.isArray(response.data) ? response.data : (response.data.advertisements || []);
+          console.log(`✅ Fetched ${ads.length} ads for position: ${position}`, ads);
           setAdvertisements(ads);
         } catch (error) {
-          // Silently handle errors - it's okay if no ads exist for this position
-          console.warn(`No advertisements found for position: ${position}`);
+          // Show actual error details
+          console.error(`❌ Error fetching ads for position "${position}":`, error.message);
+          console.error('Response:', error.response?.data);
           setAdvertisements([]);
         } finally {
           setAdLoading(false);
@@ -201,23 +214,21 @@ const ArticlePage = () => {
       return <AdvertisementSkeleton />;
     }
 
+    if (advertisements.length === 0) {
+      return null;
+    }
+
     return (
-      <div className='flex flex-col justify-center items-center'>
-        {advertisements.length > 0 && (
-          <div>
-            {advertisements.map((ad) => (
-              <div key={ad._id} onClick={() => handleAdvertisementClick(ad.websiteLink)}>
-                <Image
-                 className='rounded mb-2' 
-                 src={`${API_URL}/${ad.imagePath}`} 
-                 alt="Advertisement"
-                 width={300}
-                 height={100}
-                />
-              </div>
-            ))}
+      <div className='w-full'>
+        {advertisements.map((ad) => (
+          <div key={ad._id} onClick={() => handleAdvertisementClick(ad.websiteLink)} className='cursor-pointer w-full mb-4'>
+            <img
+              className='rounded w-full h-auto object-cover' 
+              src={`${API_URL}/${ad.imagePath}`} 
+              alt="Advertisement"
+            />
           </div>
-        )}
+        ))}
       </div>
     );
   };
@@ -225,6 +236,33 @@ const ArticlePage = () => {
   const getYouTubeVideoId = (url) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*(?:\/|v=)|[^\/]*\/))([^"&?\/\s]{11})/);
     return match ? match[1] : '';
+  };
+
+  const renderContentWithAds = (content) => {
+    if (!content) return null;
+    
+    // Split content by paragraph closing tags to insert ads at different paragraphs
+    const paragraphTags = content.split('</p>');
+    const adPositions = { 4: 'english_incontent', 8: 'english_incontent_2', 12: 'english_incontent_3' };
+    
+    return (
+      <>
+        {paragraphTags.map((paragraph, index) => {
+          if (!paragraph.trim()) return null;
+          
+          return (
+            <React.Fragment key={index}>
+              <div dangerouslySetInnerHTML={{ __html: `${paragraph}</p>` }} />
+              {adPositions[index] && (
+                <div className="my-6">
+                  <AdvertisementComponent position={adPositions[index]} />
+                </div>
+              )}
+            </React.Fragment>
+          );
+        })}
+      </>
+    );
   };
 
   const timeAgo = article ? formatDistanceToNow(parseISO(article.createdAt), { addSuffix: true }) : '';
@@ -278,8 +316,9 @@ const ArticlePage = () => {
                 </div>
               )}
               <div className="">
-                <div dangerouslySetInnerHTML={{ __html: article.content }} />
+                {renderContentWithAds(article.content)}
               </div>
+              
               {article.youtubeLink && (
                 <div className="my-6">
                   <YouTube videoId={getYouTubeVideoId(article.youtubeLink)} opts={opts} />

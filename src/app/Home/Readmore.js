@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { formatDistanceToNow, parseISO } from 'date-fns';
-import { IoTimeOutline } from 'react-icons/io5';
-import TrendingArticles from '../Pages/TrendingPage'; 
 import API_URL from '../config'; 
 
 
@@ -53,18 +51,18 @@ const Card = ({ id, headline, imageUrl, createdAt, category, onClick, onCategory
 
   return (
     <div
-      className="relative bg-white shadow-lg rounded-lg overflow-hidden cursor-pointer"
+      className="relative bg-white shadow-md rounded-lg overflow-hidden cursor-pointer hover:shadow-lg"
       onClick={() => onClick(id)}
     >
-      <div className="relative h-64">
+      <div className="relative h-52 bg-gray-300">
         <img
           src={imageUrl}
           alt={headline}
-          className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          className="w-full h-full object-cover"
+          loading="lazy"
           onError={() => console.error('Failed to load image:', imageUrl)}
         />
-        <div className="absolute top-4 left-4 bg-black bg-opacity-60 text-white text-xs font-semibold py-1 px-3 rounded-lg flex items-center">
-          <IoTimeOutline className="mr-2" />
+        <div className="absolute top-2 left-2 bg-black bg-opacity-70 text-white text-xs font-semibold py-1 px-2 rounded text-center">
           <p>{timeAgo}</p>
         </div>
         <div
@@ -72,15 +70,15 @@ const Card = ({ id, headline, imageUrl, createdAt, category, onClick, onCategory
             e.stopPropagation();
             onCategoryClick(category);
           }}
-          className="absolute top-4 right-4 bg-[#25609A] bg-opacity-70 text-white text-xs font-semibold py-1 px-3 rounded-lg cursor-pointer hover:bg-opacity-90"
+          className="absolute top-2 right-2 bg-[#25609A] text-white text-xs font-semibold py-1 px-2 rounded cursor-pointer hover:bg-[#1a3f5a]"
         >
           {category.toUpperCase()}
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black via-black/80 to-black/2">
-          <h2 className="text-sx font-semibold text-white leading-tight shadow-lg">
-            {headline}
-          </h2>
-        </div>
+      </div>
+      <div className="p-3">
+        <h2 className="text-sm font-bold text-gray-800 line-clamp-2 hover:text-[#25609A]">
+          {headline}
+        </h2>
       </div>
     </div>
   );
@@ -98,7 +96,7 @@ const Readmore = () => {
         if (response.data.success) {
           const sortedArticles = response.data.data
             .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 6);
+            .slice(0, 12);
           setArticles(sortedArticles);
         }
       } catch (error) {
@@ -125,27 +123,22 @@ const Readmore = () => {
   };
 
   return (
-    <div className="mx-3 md:mx-10 lg:mx-18 py-6">
-      <div className="mb-6 mt-2">
-      <AdvertisementComponent position="english_top2" />
+    <div className="mx-3 md:mx-10 lg:mx-18 py-8">
+      <div className="mb-6">
+        <AdvertisementComponent position="english_top2" />
       </div>
-      <div className="flex flex-col md:flex-row">
-      <div className="md:w-2/3 pr-4">
       
-      {error && <p className="text-red-500">{error}</p>}
+      {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+      
       {articles.length > 0 && (
-        <div
-        
-          className="flex items-center mb-5"
-        >
-<span className="flex-none block px-4 py-2.5 text-xl cursor-pointer rounded leading-none font-medium bg-[#25609A] text-white hover:bg-[#81BB6C] transition-colors duration-300">
-  Readmore
-</span>
-
-          <span className="flex-grow block border-t border-[#25609A] ml-4"></span>
+        <div className="mb-6">
+          <h2 className="text-3xl font-extrabold text-white bg-gradient-to-r from-[#25609A] to-[#1a3f5a] py-3 px-6 rounded-lg shadow-md text-center">
+            Read More
+          </h2>
         </div>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-2">
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {articles.map((article) => {
           const imageUrl = `${API_URL}/uploads/english/${article.photos[0]}`;
           return (
@@ -161,12 +154,6 @@ const Readmore = () => {
             />
           );
         })}
-      
-      </div>
-    </div>
-    <div className="md:w-1/3 mt-6 md:mt-0">
-          <TrendingArticles />
-        </div>
       </div>
     </div>
   );
